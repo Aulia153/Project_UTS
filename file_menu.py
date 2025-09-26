@@ -1,13 +1,16 @@
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
+import cv2
 import os
 
-# Variabel global untuk gambar
-input_image = None
-output_image = None
+# Variabel global
+input_image_pil = None
+output_image_pil = None
+input_image_cv = None
+output_image_cv = None
 
 def open_file(input_label, output_label, status_label, color_menu):
-    global input_image, output_image
+    global input_image_pil, output_image_pil, input_image_cv, output_image_cv
 
     file_path = filedialog.askopenfilename(
         filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp")]
@@ -16,24 +19,30 @@ def open_file(input_label, output_label, status_label, color_menu):
         return
 
     try:
-        img = Image.open(file_path)
-        input_image = img
-        output_image = img.copy()  # salin sebagai awal output
+        # Load untuk GUI (PIL)
+        pil_img = Image.open(file_path)
+        input_image_pil = pil_img
+        output_image_pil = pil_img.copy()
 
-        # Set gambar ke class ColorMenu
-        color_menu.set_input_image(img)
+        # Load untuk OpenCV (Processing)
+        cv_img = cv2.imread(file_path)
+        if cv_img is None:
+            raise ValueError("OpenCV gagal membaca gambar.")
+        input_image_cv = cv_img
+        output_image_cv = cv_img.copy()
 
-        display_image(input_label, img)
-        display_image(output_label, img)
+        color_menu.set_input_image(pil_img)
+
+        display_image(input_label, pil_img)
+        display_image(output_label, pil_img)
 
         status_label.config(text=f"Gambar berhasil dibuka: {os.path.basename(file_path)}")
     except Exception as e:
         messagebox.showerror("Error", f"Gagal membuka gambar: {str(e)}")
 
-
 def save_output(status_label):
-    global output_image
-    if output_image is None:
+    global output_image_pil
+    if output_image_pil is None:
         messagebox.showerror("Error", "Tidak ada gambar untuk disimpan.")
         return
 
@@ -45,20 +54,16 @@ def save_output(status_label):
         return
 
     try:
-        output_image.save(file_path)
+        output_image_pil.save(file_path)
         status_label.config(text=f"Gambar berhasil disimpan: {os.path.basename(file_path)}")
     except Exception as e:
         messagebox.showerror("Error", f"Gagal menyimpan gambar: {str(e)}")
 
-
 def exit_app(root):
     root.quit()
 
-
 def display_image(label, img):
-    """Tampilkan gambar di label dengan otomatis resize agar pas di frame."""
-    max_width, max_height = 400, 300  # batas ukuran
-
+    max_width, max_height = 400, 300
     w, h = img.size
     scale = min(max_width / w, max_height / h)
     new_size = (int(w * scale), int(h * scale))
@@ -67,19 +72,24 @@ def display_image(label, img):
     img_tk = ImageTk.PhotoImage(img_resized)
 
     label.config(image=img_tk)
-    label.image = img_tk  # simpan referensi
-
+    label.image = img_tk
 
 # Getter
-def get_input_image():
-    return input_image
+def get_input_image_pil():
+    return input_image_pil
 
+def get_output_image_pil():
+    return output_image_pil
 
-def get_output_image():
-    return output_image
+def get_input_image_cv():
+    return input_image_cv
 
+def get_output_image_cv():
+    return output_image_cv
 
-def set_output_image(new_image, output_label):
-    global output_image
-    output_image = new_image
-    display_image(output_label, new_image)
+# Setter
+def set_output_image(new_pil_image, new_cv_image, output_label):
+    global output_image_pil, output_image_cv
+    output_image_pil = new_pil_image
+    output_image_cv = new_cv_image
+    display_image(output_label, new_pil_image)

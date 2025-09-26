@@ -3,11 +3,13 @@ from tkinter import Menu
 import file_menu
 import view
 from color_menu import ColorMenu
+import image_processing
+import tentang
 
 def main():
     root = tk.Tk()
     root.title("Form1 - Image Processing (Python Port)")
-    root.geometry("900x550")
+    root.geometry("850x500")  # Window lebih kecil
     root.configure(bg="#f9f9f9")
 
     # ===== Frame utama =====
@@ -39,7 +41,7 @@ def main():
     # ===== Menu Bar =====
     menu_bar = Menu(root)
 
-    # File Menu
+    # ===== File Menu =====
     file_menu_main = Menu(menu_bar, tearoff=0)
     file_menu_main.add_command(
         label="Buka",
@@ -53,21 +55,59 @@ def main():
     file_menu_main.add_command(label="Keluar", command=lambda: file_menu.exit_app(root))
     menu_bar.add_cascade(label="File", menu=file_menu_main)
 
-    # View Menu
+    # ===== View Menu =====
     view_menu = Menu(menu_bar, tearoff=0)
     histogram_menu = Menu(view_menu, tearoff=0)
-    histogram_menu.add_command(label="Input", command=lambda: view.show_histogram_input(file_menu.get_input_image()))
-    histogram_menu.add_command(label="Output", command=lambda: view.show_histogram_output(file_menu.get_output_image()))
-    histogram_menu.add_command(label="Input Output",
-                               command=lambda: view.show_histogram_input_output(
-                                   file_menu.get_input_image(),
-                                   file_menu.get_output_image()
-                               ))
+    histogram_menu.add_command(
+        label="Input",
+        command=lambda: view.show_histogram_input(file_menu.get_input_image_pil())
+    )
+    histogram_menu.add_command(
+        label="Output",
+        command=lambda: view.show_histogram_output(file_menu.get_output_image_pil())
+    )
+    histogram_menu.add_command(
+        label="Input & Output",
+        command=lambda: view.show_histogram_input_output(
+            file_menu.get_input_image_pil(),
+            file_menu.get_output_image_pil()
+        )
+    )
     view_menu.add_cascade(label="Histogram", menu=histogram_menu)
     menu_bar.add_cascade(label="View", menu=view_menu)
 
-    # Colors Menu
+    # ===== Colors Menu =====
     color_menu = ColorMenu(root, menu_bar, input_image_label, output_image_label, status_label)
+
+    # ===== Tentang Menu =====
+    tentang_menu = Menu(menu_bar, tearoff=0)
+    tentang_menu.add_command(label="Tentang Aplikasi", command=lambda: tentang.show_about(root))
+    menu_bar.add_cascade(label="Tentang", menu=tentang_menu)
+
+    # ===== Image Processing Menu =====
+    img_proc_menu = Menu(menu_bar, tearoff=0)
+    img_proc_menu.add_command(
+        label="Histogram Equalization",
+        command=lambda: image_processing.histogram_equalization(
+            file_menu.get_input_image_cv(),  # pakai versi OpenCV
+            output_image_label
+        )
+    )
+    img_proc_menu.add_command(
+        label="Fuzzy HE RGB",
+        command=lambda: image_processing.fuzzy_he_rgb(
+            file_menu.get_input_image_cv(),
+            output_image_label
+        )
+    )
+    img_proc_menu.add_command(
+        label="Fuzzy Grayscale",
+        command=lambda: image_processing.fuzzy_grayscale(
+            file_menu.get_input_image_cv(),
+            output_image_label
+        )
+    )
+    menu_bar.add_cascade(label="Image Processing", menu=img_proc_menu)
 
     root.config(menu=menu_bar)
     root.mainloop()
