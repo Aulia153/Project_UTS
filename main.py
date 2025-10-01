@@ -5,12 +5,13 @@ import view
 from color_menu import ColorMenu
 import image_processing
 import tentang
-import arithmetic_operation  # <-- Tambahan baru
+import arithmetic_operation
+import filter_menu   # <-- pindah ke atas, rapi
 
 def main():
     root = tk.Tk()
     root.title("Form1 - Image Processing (Python Port)")
-    root.geometry("850x500")  # Window lebih kecil
+    root.geometry("850x500")  
     root.configure(bg="#f9f9f9")
 
     # ===== Frame Utama =====
@@ -118,60 +119,8 @@ def main():
     )
     menu_bar.add_cascade(label="Arithmetic Operation", menu=arithmetic_menu)
 
-        # ===== Filter Menu =====
-    import filter_menu  # pastikan ada file filter_menu.py
-
-    filter_menu_main = Menu(menu_bar, tearoff=0)
-    filter_menu_main.add_command(
-        label="Identity",
-        command=lambda: filter_menu.filter_identity(file_menu.get_input_image_cv(), output_image_label)
-    )
-
-    # Submenu Edge Detection
-    edge_menu = Menu(filter_menu_main, tearoff=0)
-    edge_menu.add_command(label="Edge Detection 1",
-        command=lambda: filter_menu.edge_detection1(file_menu.get_input_image_cv(), output_image_label))
-    edge_menu.add_command(label="Edge Detection 2",
-        command=lambda: filter_menu.edge_detection2(file_menu.get_input_image_cv(), output_image_label))
-    edge_menu.add_command(label="Edge Detection 3",
-        command=lambda: filter_menu.edge_detection3(file_menu.get_input_image_cv(), output_image_label))
-    filter_menu_main.add_cascade(label="Edge Detection", menu=edge_menu)
-
-    filter_menu_main.add_command(
-        label="Sharpen",
-        command=lambda: filter_menu.filter_sharpen(file_menu.get_input_image_cv(), output_image_label)
-    )
-
-    # Submenu Gaussian Blur
-    gaussian_menu = Menu(filter_menu_main, tearoff=0)
-    gaussian_menu.add_command(label="Gaussian Blur 3x3",
-        command=lambda: filter_menu.gaussian_blur_3(file_menu.get_input_image_cv(), output_image_label))
-    gaussian_menu.add_command(label="Gaussian Blur 5x5",
-        command=lambda: filter_menu.gaussian_blur_5(file_menu.get_input_image_cv(), output_image_label))
-    filter_menu_main.add_cascade(label="Gaussian Blur", menu=gaussian_menu)
-
-    filter_menu_main.add_command(
-        label="Unsharp Masking",
-        command=lambda: filter_menu.unsharp_masking(file_menu.get_input_image_cv(), output_image_label)
-    )
-    filter_menu_main.add_command(
-        label="Average Filter",
-        command=lambda: filter_menu.average_filter(file_menu.get_input_image_cv(), output_image_label)
-    )
-    filter_menu_main.add_command(
-        label="Low Pass Filter",
-        command=lambda: filter_menu.low_pass_filter(file_menu.get_input_image_cv(), output_image_label)
-    )
-    filter_menu_main.add_command(
-        label="High Pass Filter",
-        command=lambda: filter_menu.high_pass_filter(file_menu.get_input_image_cv(), output_image_label)
-    )
-    filter_menu_main.add_command(
-        label="Bandstop Filter",
-        command=lambda: filter_menu.bandstop_filter(file_menu.get_input_image_cv(), output_image_label)
-    )
-
-    menu_bar.add_cascade(label="Filter", menu=filter_menu_main)
+    # ===== Filter Menu =====
+    filter_menu.add_filter_menu(menu_bar, output_image_label)
 
     # ===== Set Menu ke Root =====
     root.config(menu=menu_bar)
