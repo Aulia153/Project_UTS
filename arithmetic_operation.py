@@ -1,130 +1,158 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import Toplevel, filedialog, messagebox
 from PIL import Image, ImageTk
 import cv2
 import numpy as np
 
-import file_menu  # ambil gambar dari modul file_menu
+# Warna tema
+BG_COLOR = "#f4f6f9"
+FRAME_COLOR = "#ffffff"
+BUTTON_COLOR = "#4a90e2"
+BUTTON_TEXT = "#ffffff"
 
+def open_arithmetic_window(root):
+    window = Toplevel(root)
+    window.title("Arithmetic Operation")
+    window.geometry("900x500")
+    window.configure(bg=BG_COLOR)
+    window.resizable(False, False)
 
-def display_image(label, img_pil):
-    """Tampilkan gambar PIL ke Label Tkinter."""
-    if img_pil is None:
-        return
+    # Judul
+    title = tk.Label(window, text="🔹 Arithmetic Image Operation 🔹",
+                     font=("Arial", 16, "bold"), bg=BG_COLOR, fg="#333")
+    title.pack(pady=15)
 
-    max_width, max_height = 250, 250
-    w, h = img_pil.size
-    scale = min(max_width / w, max_height / h)
-    new_size = (int(w * scale), int(h * scale))
+    # Frame utama
+    frame = tk.Frame(window, bg=BG_COLOR)
+    frame.pack(fill="both", expand=True, padx=15, pady=10)
 
-    img_resized = img_pil.resize(new_size, Image.LANCZOS)
-    img_tk = ImageTk.PhotoImage(img_resized)
+    # ==== Input 1 ====
+    frame1 = tk.LabelFrame(frame, text="Input 1", width=280, height=320,
+                           bg=FRAME_COLOR, font=("Arial", 11, "bold"))
+    frame1.grid(row=0, column=0, padx=10, pady=10)
+    frame1.grid_propagate(False)
 
-    label.config(image=img_tk)
-    label.image = img_tk
+    img1_cv = [None]
+    img1_label = tk.Label(frame1, text="Belum dipilih", bg="#d9d9d9")
+    img1_label.pack(fill="both", expand=True, padx=5, pady=5)
 
+    def select_input1():
+        path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp")])
+        if path:
+            img1_cv[0] = cv2.imread(path)
+            show_image_on_label(img1_cv[0], img1_label)
 
-def open_window(root):
-    arithmetic_window = tk.Toplevel(root)
-    arithmetic_window.title("Arithmetic Operation")
-    arithmetic_window.geometry("950x450")
-    arithmetic_window.configure(bg="white")
+    create_button(frame1, "Pilih Input 1", select_input1)
 
-    # ===== FRAME ATAS (3 kolom untuk gambar) =====
-    frame_images = tk.Frame(arithmetic_window, bg="white")
-    frame_images.pack(fill="both", expand=True, padx=10, pady=10)
+    # ==== Input 2 ====
+    frame2 = tk.LabelFrame(frame, text="Input 2", width=280, height=320,
+                           bg=FRAME_COLOR, font=("Arial", 11, "bold"))
+    frame2.grid(row=0, column=1, padx=10, pady=10)
+    frame2.grid_propagate(False)
 
-    # Frame Input 1
-    frame_in1 = tk.Frame(frame_images, bd=2, relief="groove")
-    frame_in1.pack(side="left", expand=True, fill="both", padx=5)
-    tk.Label(frame_in1, text="Input 1", font=("Arial", 10, "bold")).pack()
-    input1_label = tk.Label(frame_in1, bg="#eaeaea", relief="sunken")
-    input1_label.pack(fill="both", expand=True, padx=5, pady=5)
+    img2_cv = [None]
+    img2_label = tk.Label(frame2, text="Belum dipilih", bg="#d9d9d9")
+    img2_label.pack(fill="both", expand=True, padx=5, pady=5)
 
-    # Frame Input 2
-    frame_in2 = tk.Frame(frame_images, bd=2, relief="groove")
-    frame_in2.pack(side="left", expand=True, fill="both", padx=5)
-    tk.Label(frame_in2, text="Input 2", font=("Arial", 10, "bold")).pack()
-    input2_label = tk.Label(frame_in2, bg="#eaeaea", relief="sunken")
-    input2_label.pack(fill="both", expand=True, padx=5, pady=5)
+    def select_input2():
+        path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp")])
+        if path:
+            img2_cv[0] = cv2.imread(path)
+            show_image_on_label(img2_cv[0], img2_label)
 
-    # Frame Output
-    frame_out = tk.Frame(frame_images, bd=2, relief="groove")
-    frame_out.pack(side="left", expand=True, fill="both", padx=5)
-    tk.Label(frame_out, text="Output", font=("Arial", 10, "bold")).pack()
-    output_label = tk.Label(frame_out, bg="#eaeaea", relief="sunken")
+    create_button(frame2, "Pilih Input 2", select_input2)
+
+    # ==== Output ====
+    frame3 = tk.LabelFrame(frame, text="Output", width=280, height=320,
+                           bg=FRAME_COLOR, font=("Arial", 11, "bold"))
+    frame3.grid(row=0, column=2, padx=10, pady=10)
+    frame3.grid_propagate(False)
+
+    output_label = tk.Label(frame3, text="Hasil operasi", bg="#d9d9d9")
     output_label.pack(fill="both", expand=True, padx=5, pady=5)
 
-    # ===== FRAME BAWAH (Kontrol) =====
-    frame_controls = tk.Frame(arithmetic_window, bg="white")
-    frame_controls.pack(fill="x", pady=10)
+    result_img = [None]
 
-    tk.Label(frame_controls, text="Pilih Operasi:").pack(side="left", padx=5)
+    # ==== Panel Kontrol ====
+    control_frame = tk.Frame(window, bg=BG_COLOR)
+    control_frame.pack(pady=15)
 
-    operations = ["Penjumlahan", "Pengurangan", "Perkalian", "Pembagian"]
-    operation_var = tk.StringVar(value=operations[0])
-    operation_combo = ttk.Combobox(frame_controls, textvariable=operation_var, values=operations, state="readonly", width=18)
-    operation_combo.pack(side="left", padx=5)
+    tk.Label(control_frame, text="Operasi (+, -, *, /):",
+             bg=BG_COLOR, font=("Arial", 11)).pack(side="left", padx=5)
+    operation_entry = tk.Entry(control_frame, width=5, font=("Arial", 12))
+    operation_entry.pack(side="left", padx=5)
+    operation_entry.insert(0, "+")
 
-    # Tombol Load
-    tk.Button(
-        frame_controls,
-        text="Load Gambar",
-        command=lambda: load_images(input1_label, input2_label),
-        bg="#4CAF50", fg="white", width=15
-    ).pack(side="left", padx=5)
+    def apply_operation():
+        if img1_cv[0] is None or img2_cv[0] is None:
+            messagebox.showerror("Error", "Pilih kedua input image terlebih dahulu!")
+            return
 
-    # Tombol Proses
-    tk.Button(
-        frame_controls,
-        text="Proses Operasi",
-        command=lambda: process_arithmetic(operation_var.get(), input1_label, input2_label, output_label),
-        bg="#2196F3", fg="white", width=15
-    ).pack(side="left", padx=5)
+        op = operation_entry.get()
+        img1 = img1_cv[0]
+        img2 = img2_cv[0]
+
+        if img1.shape != img2.shape:
+            img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
+
+        try:
+            if op == "+":
+                result = cv2.add(img1, img2)
+            elif op == "-":
+                result = cv2.subtract(img1, img2)
+            elif op == "*":
+                result = cv2.multiply(img1 / 255.0, img2 / 255.0)
+                result = np.clip(result * 255, 0, 255).astype(np.uint8)
+            elif op == "/":
+                img2_safe = np.where(img2 == 0, 1, img2)
+                result = cv2.divide(img1, img2_safe)
+                result = np.clip(result, 0, 255).astype(np.uint8)
+            else:
+                messagebox.showerror("Error", "Operasi tidak valid! Gunakan +, -, *, /")
+                return
+        except Exception as e:
+            messagebox.showerror("Error", f"Gagal melakukan operasi: {str(e)}")
+            return
+
+        show_image_on_label(result, output_label)
+        result_img[0] = result
+
+    def save_output():
+        if result_img[0] is None:
+            messagebox.showwarning("Peringatan", "Belum ada hasil yang bisa disimpan!")
+            return
+        path = filedialog.asksaveasfilename(defaultextension=".png",
+                                            filetypes=[("PNG Image", "*.png"), ("JPEG Image", "*.jpg")])
+        if path:
+            cv2.imwrite(path, result_img[0])
+            messagebox.showinfo("Sukses", f"Hasil berhasil disimpan ke {path}")
+
+    create_button(control_frame, "Apply", apply_operation, side="left")
+    create_button(control_frame, "Save Output", save_output, side="left")
 
 
-def load_images(input1_label, input2_label):
-    """Ambil gambar dari file_menu.py dan tampilkan ke Input 1 & Input 2."""
-    img1_pil = file_menu.get_input_image_pil()
-    img2_pil = file_menu.get_output_image_pil()
+# ==== Helper Function untuk tampilkan gambar ====
+def show_image_on_label(img_cv, label_widget):
+    img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.resize(img_rgb, (260, 260))
+    pil_image = Image.fromarray(img_rgb)
+    img_tk = ImageTk.PhotoImage(pil_image)
+    label_widget.config(image=img_tk, text="")
+    label_widget.image = img_tk
 
-    if img1_pil is None or img2_pil is None:
-        messagebox.showerror("Error", "Harap buka gambar terlebih dahulu dari menu utama.")
-        return
-
-    display_image(input1_label, img1_pil)
-    display_image(input2_label, img2_pil)
-
-
-def process_arithmetic(operation, input1_label, input2_label, output_label):
-    """Lakukan operasi aritmatika dan tampilkan di Output."""
-    img1_cv = file_menu.get_input_image_cv()
-    img2_cv = file_menu.get_output_image_cv()
-
-    if img1_cv is None or img2_cv is None:
-        messagebox.showerror("Error", "Input 1 dan Input 2 belum di-load.")
-        return
-
-    if img1_cv.shape != img2_cv.shape:
-        messagebox.showerror("Error", "Ukuran gambar harus sama.")
-        return
-
-    if operation == "Penjumlahan":
-        result = cv2.add(img1_cv, img2_cv)
-    elif operation == "Pengurangan":
-        result = cv2.subtract(img1_cv, img2_cv)
-    elif operation == "Perkalian":
-        result = cv2.multiply(img1_cv, img2_cv)
-    elif operation == "Pembagian":
-        img2_safe = np.where(img2_cv == 0, 1, img2_cv)
-        result = cv2.divide(img1_cv.astype(np.float32), img2_safe.astype(np.float32))
-        result = np.clip(result, 0, 255).astype(np.uint8)
+# ==== Helper Function untuk tombol dengan style ====
+def create_button(parent, text, command, side="top"):
+    btn = tk.Button(parent, text=text, command=command,
+                    bg=BUTTON_COLOR, fg=BUTTON_TEXT,
+                    activebackground="#357ABD", activeforeground="white",
+                    font=("Arial", 10, "bold"), relief="flat", padx=10, pady=5, cursor="hand2")
+    if side == "top":
+        btn.pack(pady=8)
     else:
-        messagebox.showerror("Error", "Operasi tidak dikenali.")
-        return
+        btn.pack(side=side, padx=8)
+    return btn
 
-    result_rgb = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
-    result_pil = Image.fromarray(result_rgb)
 
-    display_image(output_label, result_pil)
-    file_menu.set_output_image(result_pil, result, output_label)
+# Fungsi untuk main.py panggil
+def open_window(root):
+    open_arithmetic_window(root)

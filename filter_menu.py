@@ -17,6 +17,9 @@ def apply_filter(filter_type, output_label):
         return
 
     try:
+        # Konversi grayscale bila perlu
+        gray = cv2.cvtColor(input_cv, cv2.COLOR_BGR2GRAY)
+
         # ===== BASIC FILTERS =====
         if filter_type == "identity":
             result_cv = input_cv.copy()
@@ -26,7 +29,7 @@ def apply_filter(filter_type, output_label):
                 [0, -1, 0],
                 [-1, 5, -1],
                 [0, -1, 0]
-            ])
+            ], dtype=np.float32)
             result_cv = cv2.filter2D(input_cv, -1, kernel)
 
         elif filter_type == "gaussian3":
@@ -47,7 +50,7 @@ def apply_filter(filter_type, output_label):
                 [-1, -1, -1],
                 [-1,  8, -1],
                 [-1, -1, -1]
-            ])
+            ], dtype=np.float32)
             result_cv = cv2.filter2D(input_cv, -1, kernel)
 
         elif filter_type == "unsharp":
@@ -55,51 +58,53 @@ def apply_filter(filter_type, output_label):
             result_cv = cv2.addWeighted(input_cv, 1.5, gaussian, -0.5, 0)
 
         elif filter_type == "bandstop":
-            # Bandstop = original - (lowpass + highpass)
             lowpass = cv2.GaussianBlur(input_cv, (7, 7), 0)
             highpass = cv2.subtract(input_cv, lowpass)
-            result_cv = cv2.subtract(input_cv, highpass)
+            # bandstop lebih aman langsung hasil lowpass (supaya tidak error overflow)
+            bandstop = cv2.subtract(input_cv, highpass)
+            result_cv = cv2.convertScaleAbs(bandstop)
 
         # ===== EDGE DETECTION =====
         elif filter_type == "edge1":  # Sobel
-            gray = cv2.cvtColor(input_cv, cv2.COLOR_BGR2GRAY)
             sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
             sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
             sobel_mag = cv2.magnitude(sobelx, sobely)
             result_cv = cv2.convertScaleAbs(sobel_mag)
 
         elif filter_type == "edge2":  # Prewitt
-            gray = cv2.cvtColor(input_cv, cv2.COLOR_BGR2GRAY)
             kernelx = np.array([
                 [-1, 0, 1],
                 [-1, 0, 1],
                 [-1, 0, 1]
-            ])
+            ], dtype=np.float32)
             kernely = np.array([
                 [-1, -1, -1],
                 [ 0,  0,  0],
                 [ 1,  1,  1]
-            ])
+            ], dtype=np.float32)
             x = cv2.filter2D(gray, -1, kernelx)
             y = cv2.filter2D(gray, -1, kernely)
             prewitt_mag = cv2.magnitude(x.astype(np.float32), y.astype(np.float32))
             result_cv = cv2.convertScaleAbs(prewitt_mag)
 
         elif filter_type == "edge3":  # Canny
-            gray = cv2.cvtColor(input_cv, cv2.COLOR_BGR2GRAY)
             result_cv = cv2.Canny(gray, 100, 200)
 
         else:
             result_cv = input_cv.copy()
 
         # ===== KONVERSI KE PIL =====
+        if result_cv is None or result_cv.size == 0:
+            messagebox.showerror("Error", "Filter gagal menghasilkan gambar.")
+            return
+
         if len(result_cv.shape) == 2:  # Grayscale
-            result_pil = Image.fromarray(result_cv)
-        else:  # Warna
+            result_pil = Image.fromarray(result_cv.astype(np.uint8))
+        else:  # Warna (BGR ke RGB)
             result_pil = Image.fromarray(cv2.cvtColor(result_cv, cv2.COLOR_BGR2RGB))
 
-        # Simpan ke output utama
-        file_menu.set_output_image(result_pil, result_cv, output_label)
+        # Simpan ke output utama (KEY = "main")
+        file_menu.set_output_image("main", result_pil, result_cv, output_label)
 
     except Exception as e:
         messagebox.showerror("Error", f"Gagal menerapkan filter: {str(e)}")

@@ -6,12 +6,15 @@ from color_menu import ColorMenu
 import image_processing
 import tentang
 import arithmetic_operation
-import filter_menu   # <-- pindah ke atas, rapi
+import filter_menu
+import edge_detection
+import morfologi   # ✅ ditambahkan
+
 
 def main():
     root = tk.Tk()
     root.title("Form1 - Image Processing (Python Port)")
-    root.geometry("850x500")  
+    root.geometry("850x500")
     root.configure(bg="#f9f9f9")
 
     # ===== Frame Utama =====
@@ -22,7 +25,10 @@ def main():
     left_frame = tk.Frame(main_frame, bg="#ffffff", relief="groove", borderwidth=1)
     left_frame.pack(side="left", fill="both", expand=True, padx=(0, 8))
 
-    tk.Label(left_frame, text="Input", font=("Arial", 11, "bold"), bg="#ffffff").pack(anchor="w", padx=6, pady=4)
+    tk.Label(
+        left_frame, text="Input", font=("Arial", 11, "bold"), bg="#ffffff"
+    ).pack(anchor="w", padx=6, pady=4)
+
     input_image_label = tk.Label(left_frame, bg="#f0f0f0", relief="sunken")
     input_image_label.pack(fill="both", expand=True, padx=6, pady=6)
 
@@ -30,14 +36,20 @@ def main():
     right_frame = tk.Frame(main_frame, bg="#ffffff", relief="groove", borderwidth=1)
     right_frame.pack(side="left", fill="both", expand=True)
 
-    tk.Label(right_frame, text="Output", font=("Arial", 11, "bold"), bg="#ffffff").pack(anchor="w", padx=6, pady=4)
+    tk.Label(
+        right_frame, text="Output", font=("Arial", 11, "bold"), bg="#ffffff"
+    ).pack(anchor="w", padx=6, pady=4)
+
     output_image_label = tk.Label(right_frame, bg="#f0f0f0", relief="sunken")
     output_image_label.pack(fill="both", expand=True, padx=6, pady=6)
 
     # ===== Status Bar =====
     status_frame = tk.Frame(root, relief="sunken", borderwidth=1, bg="#f0f0f0")
     status_frame.pack(side="bottom", fill="x")
-    status_label = tk.Label(status_frame, text="Siap.", anchor="w", bg="#f0f0f0", font=("Arial", 9))
+
+    status_label = tk.Label(
+        status_frame, text="Siap.", anchor="w", bg="#f0f0f0", font=("Arial", 9)
+    )
     status_label.pack(side="left", padx=8)
 
     # ===== Menu Bar =====
@@ -83,7 +95,10 @@ def main():
 
     # ===== Tentang Menu =====
     tentang_menu = Menu(menu_bar, tearoff=0)
-    tentang_menu.add_command(label="Tentang Aplikasi", command=lambda: tentang.show_about(root))
+    tentang_menu.add_command(
+        label="Tentang Aplikasi",
+        command=lambda: tentang.show_about(root)
+    )
     menu_bar.add_cascade(label="Tentang", menu=tentang_menu)
 
     # ===== Image Processing Menu =====
@@ -91,22 +106,19 @@ def main():
     img_proc_menu.add_command(
         label="Histogram Equalization",
         command=lambda: image_processing.histogram_equalization(
-            file_menu.get_input_image_cv(),
-            output_image_label
+            file_menu.get_input_image_cv(), output_image_label
         )
     )
     img_proc_menu.add_command(
         label="Fuzzy HE RGB",
         command=lambda: image_processing.fuzzy_he_rgb(
-            file_menu.get_input_image_cv(),
-            output_image_label
+            file_menu.get_input_image_cv(), output_image_label
         )
     )
     img_proc_menu.add_command(
         label="Fuzzy Grayscale",
         command=lambda: image_processing.fuzzy_grayscale(
-            file_menu.get_input_image_cv(),
-            output_image_label
+            file_menu.get_input_image_cv(), output_image_label
         )
     )
     menu_bar.add_cascade(label="Image Processing", menu=img_proc_menu)
@@ -121,6 +133,12 @@ def main():
 
     # ===== Filter Menu =====
     filter_menu.add_filter_menu(menu_bar, output_image_label)
+
+    # ===== Edge Detection Menu =====
+    edge_detection.add_edge_menu(menu_bar, output_image_label)
+
+    # ===== Morphology Menu =====
+    morfologi.add_morphology_menu(menu_bar, output_image_label)  
 
     # ===== Set Menu ke Root =====
     root.config(menu=menu_bar)

@@ -2,6 +2,8 @@ from tkinter import Menu, messagebox
 from PIL import Image, ImageTk, ImageEnhance
 import file_menu
 import math
+import cv2
+import numpy as np
 
 class ColorMenu:
     def __init__(self, root, menu_bar, input_label, output_label, status_label):
@@ -53,20 +55,25 @@ class ColorMenu:
         # === Gamma Correction ===
         self.menu.add_command(label="Gamma Correction", command=self.apply_gamma_correction)
 
-    # Set image
+    # Set input image
     def set_input_image(self, img):
         self.input_image = img
         self.output_image = img.copy()
 
+    # Check apakah image sudah di-load
     def check_image_loaded(self):
         if self.input_image is None:
             messagebox.showerror("Error", "Input image belum dibuka.")
             return False
         return True
 
+    # Update output ke file_menu dan GUI
     def update_output_display(self):
         if self.output_image:
-            file_menu.set_output_image(self.output_image, self.output_label)
+            # Konversi PIL -> OpenCV
+            cv_img = cv2.cvtColor(np.array(self.output_image), cv2.COLOR_RGB2BGR)
+            # Simpan ke slot 'main' di file_menu
+            file_menu.set_output_image("main", self.output_image, cv_img, self.output_label)
             self.status_label.config(text="Output berhasil diperbarui.")
 
     # ========== FILTERS ==========
